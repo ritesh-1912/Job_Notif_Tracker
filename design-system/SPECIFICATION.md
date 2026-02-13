@@ -157,3 +157,7 @@ Single row. No extra nav or decorative elements.
 - [ ] Errors and empty states have clear copy and next actions.
 
 Everything must feel like one mind designed it. No visual drift.
+
+---
+
+**Project:** This design system is used by the [Job Notification Tracker](../README.md) app in this repository.

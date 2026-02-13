@@ -2,6 +2,8 @@
 
 A calm, intentional design system for B2C product experiences. One mind. No visual drift.
 
+**This folder also contains the Job Notification Tracker app.** For app overview, routes, and deploy instructions, see the [project README](../README.md) in the repo root.
+
 ## Quick start
 
 Link the single entry file in your app:
