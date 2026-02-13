@@ -23,15 +23,234 @@
   </header>
   <main class="app-main">
     <h1 class="app-page-heading">Digest</h1>
-    <div class="empty-state">
+
+    <!-- No preferences: blocking -->
+    <div class="digest-no-prefs" id="digest-no-prefs" hidden>
+      Set preferences to generate a personalized digest. <a href="settings.html">Go to Settings</a>
+    </div>
+
+    <!-- Has prefs: generate or view -->
+    <div class="digest-block" id="digest-block" hidden>
+      <div id="digest-generate-area">
+        <button type="button" class="kn-btn kn-btn--primary" id="digest-generate-btn">
+          Generate Today's 9AM Digest (Simulated)
+        </button>
+      </div>
+
+      <div class="digest-no-matches empty-state" id="digest-no-matches" hidden>
+        <h2 class="empty-state__heading">No matching roles today.</h2>
+        <p class="empty-state__text">Check again tomorrow.</p>
+      </div>
+
+      <div id="digest-content" hidden>
+        <div class="digest-card">
+          <div class="digest-card__header">
+            <h2 class="digest-card__title">Top 10 Jobs For You — 9AM Digest</h2>
+            <p class="digest-card__date" id="digest-date"></p>
+          </div>
+          <div id="digest-jobs"></div>
+          <p class="digest-card__footer">This digest was generated based on your preferences.</p>
+        </div>
+        <div class="digest-actions">
+          <button type="button" class="kn-btn kn-btn--secondary" id="digest-copy-btn">Copy Digest to Clipboard</button>
+          <a href="#" class="kn-btn kn-btn--secondary" id="digest-email-btn">Create Email Draft</a>
+        </div>
+        <p class="digest-demo-note">Demo Mode: Daily 9AM trigger simulated manually.</p>
+      </div>
+    </div>
+
+    <!-- Empty state when no digest and no prefs message shown -->
+    <div class="empty-state" id="digest-empty-fallback" hidden>
       <h2 class="empty-state__heading">No digest yet.</h2>
-      <p class="empty-state__text">Your daily digest will appear here once configured.</p>
+      <p class="empty-state__text">Set preferences and generate your first digest above.</p>
     </div>
   </main>
+
+  <script src="jobs-data.js"></script>
+  <script src="preferences.js"></script>
   <script>
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-      document.getElementById('app-nav').classList.toggle('is-open');
-    });
+    (function () {
+      var DIGEST_PREFIX = 'jobTrackerDigest_';
+      var jobs = window.JOB_NOTIF_JOBS || [];
+      var prefsApi = window.JobTrackerPreferences;
+
+      function todayKey() {
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function getStoredDigest() {
+        var key = DIGEST_PREFIX + todayKey();
+        try {
+          var raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function setStoredDigest(data) {
+        var key = DIGEST_PREFIX + todayKey();
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+
+      function generateDigest() {
+        var prefs = prefsApi.getPreferences();
+        if (!prefs) return null;
+        var scored = jobs.map(function (j) {
+          return { job: j, score: prefsApi.computeMatchScore(j, prefs) };
+        });
+        scored.sort(function (a, b) {
+          if (b.score !== a.score) return b.score - a.score;
+          return a.job.postedDaysAgo - b.job.postedDaysAgo;
+        });
+        var top10 = scored.slice(0, 10).map(function (x) {
+          var j = x.job;
+          return {
+            id: j.id,
+            title: j.title,
+            company: j.company,
+            location: j.location,
+            experience: j.experience,
+            matchScore: x.score,
+            applyUrl: j.applyUrl
+          };
+        });
+        var data = { date: todayKey(), jobs: top10 };
+        setStoredDigest(data);
+        return data;
+      }
+
+      function formatDigestPlainText(data) {
+        var lines = [
+          'Top 10 Jobs For You — 9AM Digest',
+          data.date,
+          '',
+          '—'
+        ];
+        data.jobs.forEach(function (item, i) {
+          lines.push('');
+          lines.push((i + 1) + '. ' + item.title + ' at ' + item.company);
+          lines.push('   Location: ' + item.location + ' | Experience: ' + item.experience + ' | Match: ' + item.matchScore);
+          lines.push('   Apply: ' + item.applyUrl);
+        });
+        lines.push('');
+        lines.push('—');
+        lines.push('This digest was generated based on your preferences.');
+        return lines.join('\n');
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function escapeAttr(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function renderDigest(data) {
+        var dateEl = document.getElementById('digest-date');
+        var container = document.getElementById('digest-jobs');
+        var d = new Date(data.date + 'T12:00:00');
+        dateEl.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        container.innerHTML = '';
+        data.jobs.forEach(function (item) {
+          var div = document.createElement('div');
+          div.className = 'digest-job';
+          div.innerHTML =
+            '<h3 class="digest-job__title">' + escapeHtml(item.title) + '</h3>' +
+            '<p class="digest-job__meta">' + escapeHtml(item.company) + ' · ' + escapeHtml(item.location) + ' · ' + escapeHtml(item.experience) + '</p>' +
+            '<p class="digest-job__score">Match: ' + item.matchScore + '</p>' +
+            '<a href="' + escapeAttr(item.applyUrl) + '" target="_blank" rel="noopener" class="kn-btn kn-btn--primary">Apply</a>';
+          container.appendChild(div);
+        });
+
+        var emailBtn = document.getElementById('digest-email-btn');
+        var text = formatDigestPlainText(data);
+        emailBtn.href = 'mailto:?subject=' + encodeURIComponent('My 9AM Job Digest') + '&body=' + encodeURIComponent(text);
+      }
+
+      function showState() {
+        var prefs = prefsApi.getPreferences();
+        var noPrefs = document.getElementById('digest-no-prefs');
+        var block = document.getElementById('digest-block');
+        var generateArea = document.getElementById('digest-generate-area');
+        var noMatches = document.getElementById('digest-no-matches');
+        var content = document.getElementById('digest-content');
+        var fallback = document.getElementById('digest-empty-fallback');
+
+        noPrefs.hidden = !!prefs;
+        block.hidden = !prefs;
+        fallback.hidden = true;
+
+        if (!prefs) return;
+
+        var stored = getStoredDigest();
+        if (stored && stored.jobs && stored.jobs.length > 0) {
+          generateArea.hidden = true;
+          noMatches.hidden = true;
+          content.hidden = false;
+          renderDigest(stored);
+          return;
+        }
+
+        generateArea.hidden = false;
+        noMatches.hidden = true;
+        content.hidden = true;
+      }
+
+      function onGenerate() {
+        var prefs = prefsApi.getPreferences();
+        if (!prefs) return;
+        var data = getStoredDigest();
+        if (data && data.jobs && data.jobs.length > 0) {
+          renderDigest(data);
+          document.getElementById('digest-generate-area').hidden = true;
+          document.getElementById('digest-no-matches').hidden = true;
+          document.getElementById('digest-content').hidden = false;
+          return;
+        }
+        data = generateDigest();
+        if (!data || data.jobs.length === 0) {
+          document.getElementById('digest-generate-area').hidden = true;
+          document.getElementById('digest-content').hidden = true;
+          document.getElementById('digest-no-matches').hidden = false;
+          return;
+        }
+        document.getElementById('digest-generate-area').hidden = true;
+        document.getElementById('digest-no-matches').hidden = true;
+        document.getElementById('digest-content').hidden = false;
+        renderDigest(data);
+      }
+
+      function onCopy() {
+        var stored = getStoredDigest();
+        if (!stored || !stored.jobs.length) return;
+        var text = formatDigestPlainText(stored);
+        navigator.clipboard.writeText(text).then(function () {
+          var btn = document.getElementById('digest-copy-btn');
+          var orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function () { btn.textContent = orig; }, 2000);
+        }).catch(function () {});
+      }
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      document.getElementById('digest-generate-btn').addEventListener('click', onGenerate);
+      document.getElementById('digest-copy-btn').addEventListener('click', onCopy);
+
+      showState();
+    })();
   </script>
 </body>
 </html>
