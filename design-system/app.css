@@ -143,6 +143,108 @@
   max-width: var(--kn-body-max-width);
 }
 
+/* ─── Landing page ─── */
+.landing {
+  max-width: var(--kn-body-max-width);
+  margin: 0 auto;
+  padding: var(--kn-space-5) 0;
+  text-align: left;
+}
+
+.landing__headline {
+  font-family: var(--kn-font-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: var(--kn-letter-spacing-heading);
+  line-height: 1.25;
+  margin: 0 0 var(--kn-space-3);
+  color: var(--kn-text);
+}
+
+.landing__subtext {
+  font-size: var(--kn-body-size-lg);
+  line-height: var(--kn-body-line);
+  color: var(--kn-text);
+  opacity: 0.9;
+  margin: 0 0 var(--kn-space-4);
+}
+
+.landing__cta {
+  margin-top: var(--kn-space-3);
+}
+
+/* ─── Empty states (premium, calm) ─── */
+.empty-state {
+  max-width: var(--kn-body-max-width);
+  padding: var(--kn-space-5) 0;
+  text-align: left;
+}
+
+.empty-state__heading {
+  font-family: var(--kn-font-serif);
+  font-size: var(--kn-heading-size);
+  font-weight: 600;
+  letter-spacing: var(--kn-letter-spacing-heading);
+  margin: 0 0 var(--kn-space-2);
+  color: var(--kn-text);
+}
+
+.empty-state__text {
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+  opacity: 0.85;
+  margin: 0;
+  line-height: var(--kn-body-line);
+}
+
+/* ─── Settings form (placeholder fields) ─── */
+.settings-form {
+  max-width: var(--kn-body-max-width);
+  padding: var(--kn-space-3) 0;
+}
+
+.form-group {
+  margin-bottom: var(--kn-space-3);
+}
+
+.form-label {
+  display: block;
+  font-size: var(--kn-body-size);
+  font-weight: 500;
+  color: var(--kn-text);
+  margin-bottom: var(--kn-space-1);
+}
+
+.form-hint {
+  font-size: 0.875rem;
+  color: var(--kn-text);
+  opacity: 0.7;
+  margin-top: var(--kn-space-1);
+}
+
+select.kn-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23111111' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--kn-space-2) center;
+  padding-right: 2.5rem;
+}
+
+/* ─── Proof placeholder ─── */
+.proof-placeholder {
+  max-width: var(--kn-body-max-width);
+  padding: var(--kn-space-3) 0;
+}
+
+.proof-placeholder__text {
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+  opacity: 0.85;
+  margin: var(--kn-space-2) 0 0;
+  line-height: var(--kn-body-line);
+}
+
 /* ─── Mobile: hamburger menu ─── */
 @media (max-width: 768px) {
   .app-nav {

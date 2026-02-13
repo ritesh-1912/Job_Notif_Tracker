@@ -23,7 +23,44 @@
   </header>
   <main class="app-main">
     <h1 class="app-page-heading">Settings</h1>
-    <p class="app-page-subtext">This section will be built in the next step.</p>
+    <p class="app-page-subtext">Configure your job preferences. Logic will be added in a later step.</p>
+    <form class="settings-form" id="settings-form" aria-describedby="settings-desc">
+      <p id="settings-desc" class="form-hint" style="margin-bottom: var(--kn-space-3);">Placeholder fields — no saving yet.</p>
+
+      <div class="form-group">
+        <label class="form-label" for="role-keywords">Role keywords</label>
+        <input type="text" id="role-keywords" class="kn-input" placeholder="e.g. Frontend, React, Product Manager" autocomplete="off">
+        <p class="form-hint">Comma-separated or one per line.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="locations">Preferred locations</label>
+        <input type="text" id="locations" class="kn-input" placeholder="e.g. San Francisco, NYC, London" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="mode">Mode</label>
+        <select id="mode" class="kn-input" aria-describedby="mode-hint">
+          <option value="">Select…</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="onsite">Onsite</option>
+        </select>
+        <p id="mode-hint" class="form-hint">Remote, Hybrid, or Onsite.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="experience">Experience level</label>
+        <select id="experience" class="kn-input">
+          <option value="">Select…</option>
+          <option value="intern">Intern</option>
+          <option value="entry">Entry</option>
+          <option value="mid">Mid</option>
+          <option value="senior">Senior</option>
+          <option value="lead">Lead</option>
+        </select>
+      </div>
+    </form>
   </main>
   <script>
     document.getElementById('nav-toggle').addEventListener('click', function () {
