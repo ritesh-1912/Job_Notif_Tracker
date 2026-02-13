@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KodNest Premium Build System — Demo</title>
+  <link rel="stylesheet" href="design-system.css">
+</head>
+<body>
+  <div class="kn-top-bar">
+    <div class="kn-top-bar__project">Project Name</div>
+    <div class="kn-top-bar__progress">Step 2 / 5</div>
+    <div class="kn-top-bar__status">
+      <span class="kn-badge kn-badge--progress">In Progress</span>
+    </div>
+  </div>
+  <div class="kn-context-header">
+    <h1 class="kn-heading">Build Your Product</h1>
+    <p class="kn-subtext">Create the core features step by step with clear guidance.</p>
+  </div>
+  <div class="kn-main">
+    <div class="kn-workspace">
+      <div class="kn-card">
+        <h2 class="kn-heading-sm">Feature Card</h2>
+        <p class="kn-body-lg">This is the primary workspace where main product interactions happen. Cards use subtle borders and balanced padding from the spacing scale.</p>
+        <div style="margin-top: var(--kn-space-3);">
+          <button class="kn-btn kn-btn--primary">Primary Action</button>
+          <button class="kn-btn kn-btn--secondary" style="margin-left: var(--kn-space-2);">Secondary</button>
+        </div>
+      </div>
+      <div class="kn-card">
+        <h2 class="kn-heading-sm">Input Example</h2>
+        <input type="text" class="kn-input" placeholder="Enter text here" style="margin-top: var(--kn-space-2);">
+        <p style="margin-top: var(--kn-space-2); font-size: 0.875rem; opacity: 0.8;">Clean borders, clear focus state. No heavy shadows.</p>
+      </div>
+      <div class="kn-card">
+        <h2 class="kn-heading-sm">Status Badges</h2>
+        <div style="display: flex; gap: var(--kn-space-2); margin-top: var(--kn-space-2); flex-wrap: wrap;">
+          <span class="kn-badge kn-badge--not-started">Not Started</span>
+          <span class="kn-badge kn-badge--progress">In Progress</span>
+          <span class="kn-badge kn-badge--shipped">Shipped</span>
+        </div>
+      </div>
+      <div class="kn-card">
+        <h2 class="kn-heading-sm">Error State</h2>
+        <div class="kn-error" style="margin-top: var(--kn-space-2);">
+          <div class="kn-error__title">Something went wrong</div>
+          <div class="kn-error__fix">Check your connection and try again. If the issue persists, contact support.</div>
+        </div>
+      </div>
+      <div class="kn-card">
+        <h2 class="kn-heading-sm">Empty State</h2>
+        <div class="kn-empty" style="margin-top: var(--kn-space-2);">
+          <div class="kn-empty__message">No items yet</div>
+          <button class="kn-btn kn-btn--primary">Add Your First Item</button>
+        </div>
+      </div>
+    </div>
+    <div class="kn-panel">
+      <h2 class="kn-heading-sm">Step Explanation</h2>
+      <p class="kn-step-explanation">This is a short explanation of the current step. It provides context without overwhelming detail.</p>
+      <h3 style="font-size: var(--kn-body-size); font-weight: 500; margin-top: var(--kn-space-3); margin-bottom: var(--kn-space-1);">Copyable Prompt</h3>
+      <div class="kn-prompt-box">Create a user authentication system with email and password login. Include error handling and validation.</div>
+      <div class="kn-panel-actions">
+        <button class="kn-btn kn-btn--secondary">Copy</button>
+        <button class="kn-btn kn-btn--secondary">Build in Lovable</button>
+        <button class="kn-btn kn-btn--primary">It Worked</button>
+        <button class="kn-btn kn-btn--secondary">Error</button>
+        <button class="kn-btn kn-btn--secondary">Add Screenshot</button>
+      </div>
+    </div>
+  </div>
+  <div class="kn-proof-footer">
+    <div class="kn-proof-footer__title">Proof Checklist</div>
+    <ul class="kn-proof-checklist">
+      <li><input type="checkbox" id="proof-ui"><label for="proof-ui">UI Built</label></li>
+      <li><input type="checkbox" id="proof-logic"><label for="proof-logic">Logic Working</label></li>
+      <li><input type="checkbox" id="proof-test"><label for="proof-test">Test Passed</label></li>
+      <li><input type="checkbox" id="proof-deploy"><label for="proof-deploy">Deployed</label></li>
+    </ul>
+  </div>
+</body>
+</html>
