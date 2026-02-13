@@ -231,6 +231,119 @@ select.kn-input {
   padding-right: 2.5rem;
 }
 
+select.kn-input[multiple] {
+  background-image: none;
+  padding-right: var(--kn-space-2);
+}
+
+.form-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--kn-space-2);
+  margin-top: var(--kn-space-1);
+}
+
+.form-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kn-space-1);
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+  cursor: pointer;
+}
+
+.form-checkbox input {
+  accent-color: var(--kn-accent);
+  cursor: pointer;
+}
+
+.form-slider {
+  width: 100%;
+  max-width: 280px;
+  height: 8px;
+  margin-top: var(--kn-space-1);
+  accent-color: var(--kn-accent);
+  cursor: pointer;
+}
+
+.form-actions {
+  margin-top: var(--kn-space-4);
+}
+
+/* ─── Preferences banner (dashboard) ─── */
+.prefs-banner {
+  padding: var(--kn-space-2) var(--kn-space-3);
+  margin-bottom: var(--kn-space-3);
+  border: var(--kn-border-width) solid var(--kn-warning);
+  border-radius: var(--kn-radius);
+  background: var(--kn-background);
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+}
+
+.prefs-banner a {
+  color: var(--kn-accent);
+  font-weight: 500;
+}
+
+/* ─── Threshold toggle ─── */
+.threshold-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--kn-space-2);
+  margin-bottom: var(--kn-space-3);
+  flex-wrap: wrap;
+}
+
+.threshold-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kn-space-1);
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+  cursor: pointer;
+}
+
+.threshold-toggle input {
+  accent-color: var(--kn-accent);
+  cursor: pointer;
+}
+
+/* ─── Match score badge ─── */
+.job-card__score {
+  display: inline-block;
+  padding: 2px var(--kn-space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--kn-radius);
+  margin-right: var(--kn-space-1);
+}
+
+.job-card__score--high {
+  background: var(--kn-success);
+  color: var(--kn-background);
+  border: none;
+}
+
+.job-card__score--medium {
+  background: var(--kn-warning);
+  color: var(--kn-background);
+  border: none;
+}
+
+.job-card__score--neutral {
+  background: var(--kn-border);
+  color: var(--kn-text);
+  border: none;
+}
+
+.job-card__score--low {
+  background: transparent;
+  color: var(--kn-text);
+  opacity: 0.6;
+  border: var(--kn-border-width) solid var(--kn-border);
+}
+
 /* ─── Proof placeholder ─── */
 .proof-placeholder {
   max-width: var(--kn-body-max-width);

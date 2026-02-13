@@ -24,6 +24,10 @@
   <main class="app-main">
     <h1 class="app-page-heading">Dashboard</h1>
 
+    <div class="prefs-banner" id="prefs-banner" hidden role="status">
+      Set your preferences to activate intelligent matching. <a href="settings.html">Go to Settings</a>
+    </div>
+
     <div class="filter-bar" id="filter-bar" aria-label="Filter jobs">
       <input type="search" id="filter-keyword" class="kn-input filter-bar__keyword" placeholder="Keyword (title or company)" aria-label="Search by title or company">
       <select id="filter-location" class="kn-input" aria-label="Location">
@@ -51,13 +55,23 @@
       <select id="filter-sort" class="kn-input" aria-label="Sort">
         <option value="latest">Latest</option>
         <option value="oldest">Oldest</option>
+        <option value="match">Match Score</option>
+        <option value="salary-low">Salary (low)</option>
+        <option value="salary-high">Salary (high)</option>
       </select>
+    </div>
+
+    <div class="threshold-toggle">
+      <label>
+        <input type="checkbox" id="threshold-toggle" aria-label="Show only jobs above my threshold">
+        Show only jobs above my threshold
+      </label>
     </div>
 
     <div class="jobs-grid" id="jobs-grid" role="list"></div>
     <div class="empty-state" id="dashboard-empty" hidden>
-      <h2 class="empty-state__heading">No jobs match your filters.</h2>
-      <p class="empty-state__text">Try changing or clearing filters.</p>
+      <h2 class="empty-state__heading">No roles match your criteria.</h2>
+      <p class="empty-state__text">Adjust filters or lower threshold.</p>
     </div>
   </main>
 
@@ -75,10 +89,12 @@
   </div>
 
   <script src="jobs-data.js"></script>
+  <script src="preferences.js"></script>
   <script>
     (function () {
       var STORAGE_KEY = 'jobNotifSavedIds';
       var jobs = window.JOB_NOTIF_JOBS || [];
+      var prefsApi = window.JobTrackerPreferences;
       var savedIds = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
       function getSavedSet() {
@@ -112,13 +128,29 @@
         return days + ' days ago';
       }
 
+      function scoreBadgeClass(score) {
+        if (score >= 80) return 'job-card__score--high';
+        if (score >= 60) return 'job-card__score--medium';
+        if (score >= 40) return 'job-card__score--neutral';
+        return 'job-card__score--low';
+      }
+
+      function extractSalaryNumber(salaryRange) {
+        if (!salaryRange) return 0;
+        var m = salaryRange.match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
+      }
+
       function filterAndSort() {
+        var prefs = prefsApi.getPreferences();
         var keyword = (document.getElementById('filter-keyword').value || '').trim().toLowerCase();
         var location = (document.getElementById('filter-location').value || '').trim();
         var mode = (document.getElementById('filter-mode').value || '').trim();
         var experience = (document.getElementById('filter-experience').value || '').trim();
         var source = (document.getElementById('filter-source').value || '').trim();
         var sort = document.getElementById('filter-sort').value || 'latest';
+        var onlyAboveThreshold = document.getElementById('threshold-toggle').checked;
+        var minScore = (prefs && prefs.minMatchScore != null) ? prefs.minMatchScore : 40;
 
         var list = jobs.filter(function (j) {
           if (keyword) {
@@ -132,27 +164,44 @@
           return true;
         });
 
-        list = list.slice().sort(function (a, b) {
-          return sort === 'latest' ? a.postedDaysAgo - b.postedDaysAgo : b.postedDaysAgo - a.postedDaysAgo;
+        var scored = list.map(function (j) {
+          var s = prefsApi.computeMatchScore(j, prefs);
+          return { job: j, score: s, salaryNum: extractSalaryNumber(j.salaryRange) };
         });
 
-        return list;
+        if (onlyAboveThreshold) {
+          scored = scored.filter(function (x) { return x.score >= minScore; });
+        }
+
+        scored.sort(function (a, b) {
+          if (sort === 'latest') return a.job.postedDaysAgo - b.job.postedDaysAgo;
+          if (sort === 'oldest') return b.job.postedDaysAgo - a.job.postedDaysAgo;
+          if (sort === 'match') return b.score - a.score;
+          if (sort === 'salary-low') return a.salaryNum - b.salaryNum;
+          if (sort === 'salary-high') return b.salaryNum - a.salaryNum;
+          return 0;
+        });
+
+        return scored;
       }
 
-      function renderJobCard(job, isSaved) {
+      function renderJobCard(item, isSaved) {
+        var job = item.job;
+        var score = item.score;
         var card = document.createElement('article');
         card.className = 'job-card';
         card.setAttribute('data-job-id', job.id);
         card.setAttribute('role', 'listitem');
 
-        var skillsText = Array.isArray(job.skills) ? job.skills.join(', ') : '';
+        var scoreClass = scoreBadgeClass(score);
+        var scoreBadge = '<span class="job-card__score ' + scoreClass + '" aria-label="Match score ' + score + '">' + score + '</span>';
 
         card.innerHTML =
           '<h3 class="job-card__title">' + escapeHtml(job.title) + '</h3>' +
           '<p class="job-card__company">' + escapeHtml(job.company) + '</p>' +
           '<p class="job-card__meta">' + escapeHtml(job.location) + ' · ' + escapeHtml(job.mode) + '<br>Experience: ' + escapeHtml(job.experience) + '</p>' +
           '<p class="job-card__salary">' + escapeHtml(job.salaryRange) + '</p>' +
-          '<div class="job-card__badges"><span class="job-card__badge">' + escapeHtml(job.source) + '</span></div>' +
+          '<div class="job-card__badges">' + scoreBadge + '<span class="job-card__badge">' + escapeHtml(job.source) + '</span></div>' +
           '<p class="job-card__posted">' + postedText(job.postedDaysAgo) + '</p>' +
           '<div class="job-card__actions">' +
             '<button type="button" class="kn-btn kn-btn--secondary job-btn-view" data-id="' + escapeAttr(job.id) + '">View</button>' +
@@ -163,9 +212,7 @@
         var viewBtn = card.querySelector('.job-btn-view');
         var saveBtn = card.querySelector('.job-btn-save');
 
-        viewBtn.addEventListener('click', function () {
-          openModal(job);
-        });
+        viewBtn.addEventListener('click', function () { openModal(job); });
 
         saveBtn.addEventListener('click', function () {
           var id = job.id;
@@ -218,6 +265,10 @@
       }
 
       function render() {
+        var prefs = prefsApi.getPreferences();
+        var banner = document.getElementById('prefs-banner');
+        banner.hidden = !!prefs;
+
         var list = filterAndSort();
         var grid = document.getElementById('jobs-grid');
         var emptyEl = document.getElementById('dashboard-empty');
@@ -229,8 +280,8 @@
           return;
         }
         emptyEl.hidden = true;
-        list.forEach(function (job) {
-          grid.appendChild(renderJobCard(job, savedSet.has(job.id)));
+        list.forEach(function (item) {
+          grid.appendChild(renderJobCard(item, savedSet.has(item.job.id)));
         });
       }
 
@@ -254,6 +305,7 @@
       });
       document.getElementById('filter-keyword').addEventListener('input', render);
       document.getElementById('filter-keyword').addEventListener('change', render);
+      document.getElementById('threshold-toggle').addEventListener('change', render);
 
       document.getElementById('modal-close').addEventListener('click', closeModal);
       document.getElementById('job-modal').addEventListener('click', function (e) {

@@ -23,49 +23,140 @@
   </header>
   <main class="app-main">
     <h1 class="app-page-heading">Settings</h1>
-    <p class="app-page-subtext">Configure your job preferences. Logic will be added in a later step.</p>
-    <form class="settings-form" id="settings-form" aria-describedby="settings-desc">
-      <p id="settings-desc" class="form-hint" style="margin-bottom: var(--kn-space-3);">Placeholder fields — no saving yet.</p>
-
+    <p class="app-page-subtext">Configure your job preferences. Saved to this device.</p>
+    <form class="settings-form" id="settings-form">
       <div class="form-group">
         <label class="form-label" for="role-keywords">Role keywords</label>
-        <input type="text" id="role-keywords" class="kn-input" placeholder="e.g. Frontend, React, Product Manager" autocomplete="off">
-        <p class="form-hint">Comma-separated or one per line.</p>
+        <input type="text" id="role-keywords" class="kn-input" placeholder="e.g. React, Java, Product Manager" autocomplete="off">
+        <p class="form-hint">Comma-separated. Used to match job title and description.</p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="locations">Preferred locations</label>
-        <input type="text" id="locations" class="kn-input" placeholder="e.g. San Francisco, NYC, London" autocomplete="off">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="mode">Mode</label>
-        <select id="mode" class="kn-input" aria-describedby="mode-hint">
-          <option value="">Select…</option>
-          <option value="remote">Remote</option>
-          <option value="hybrid">Hybrid</option>
-          <option value="onsite">Onsite</option>
+        <label class="form-label">Preferred locations</label>
+        <select id="preferred-locations" class="kn-input" multiple size="5" aria-describedby="loc-hint">
+          <!-- filled by script from job data -->
         </select>
-        <p id="mode-hint" class="form-hint">Remote, Hybrid, or Onsite.</p>
+        <p id="loc-hint" class="form-hint">Hold Ctrl/Cmd to select multiple.</p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="experience">Experience level</label>
-        <select id="experience" class="kn-input">
-          <option value="">Select…</option>
-          <option value="intern">Intern</option>
-          <option value="entry">Entry</option>
-          <option value="mid">Mid</option>
-          <option value="senior">Senior</option>
-          <option value="lead">Lead</option>
+        <span class="form-label">Preferred mode</span>
+        <div class="form-checkboxes">
+          <label class="form-checkbox"><input type="checkbox" name="mode" value="Remote"> Remote</label>
+          <label class="form-checkbox"><input type="checkbox" name="mode" value="Hybrid"> Hybrid</label>
+          <label class="form-checkbox"><input type="checkbox" name="mode" value="Onsite"> Onsite</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="experience-level">Experience level</label>
+        <select id="experience-level" class="kn-input">
+          <option value="">Any</option>
+          <option value="Fresher">Fresher</option>
+          <option value="0-1">0-1</option>
+          <option value="1-3">1-3</option>
+          <option value="3-5">3-5</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="skills">Skills</label>
+        <input type="text" id="skills" class="kn-input" placeholder="e.g. React, Java, SQL" autocomplete="off">
+        <p class="form-hint">Comma-separated. Match against job skills.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="min-match-score">Minimum match score <span id="min-match-value">40</span></label>
+        <input type="range" id="min-match-score" class="form-slider" min="0" max="100" value="40" aria-valuetext="40">
+        <p class="form-hint">0–100. Dashboard can show only jobs at or above this score.</p>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="kn-btn kn-btn--primary">Save preferences</button>
       </div>
     </form>
   </main>
+  <script src="jobs-data.js"></script>
+  <script src="preferences.js"></script>
   <script>
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-      document.getElementById('app-nav').classList.toggle('is-open');
-    });
+    (function () {
+      var api = window.JobTrackerPreferences;
+      var jobs = window.JOB_NOTIF_JOBS || [];
+      var form = document.getElementById('settings-form');
+      var locSelect = document.getElementById('preferred-locations');
+      var minScoreSlider = document.getElementById('min-match-score');
+      var minScoreValue = document.getElementById('min-match-value');
+
+      function uniqueLocations() {
+        var seen = {};
+        jobs.forEach(function (j) {
+          if (j.location && !seen[j.location]) seen[j.location] = true;
+        });
+        return Object.keys(seen).sort();
+      }
+
+      function loadPreferences() {
+        var p = api.getPreferences();
+        if (!p) return;
+        document.getElementById('role-keywords').value = p.roleKeywords || '';
+        document.getElementById('skills').value = p.skills || '';
+        document.getElementById('experience-level').value = p.experienceLevel || '';
+        minScoreSlider.value = p.minMatchScore;
+        minScoreValue.textContent = p.minMatchScore;
+        var locs = p.preferredLocations || [];
+        [].slice.call(locSelect.options).forEach(function (opt) {
+          opt.selected = locs.indexOf(opt.value) !== -1;
+        });
+        (p.preferredMode || []).forEach(function (m) {
+          var cb = document.querySelector('input[name="mode"][value="' + m + '"]');
+          if (cb) cb.checked = true;
+        });
+      }
+
+      function savePreferences() {
+        var locs = [];
+        [].slice.call(locSelect.options).forEach(function (opt) {
+          if (opt.selected) locs.push(opt.value);
+        });
+        var mode = [];
+        document.querySelectorAll('input[name="mode"]:checked').forEach(function (cb) {
+          mode.push(cb.value);
+        });
+        var p = {
+          roleKeywords: document.getElementById('role-keywords').value.trim(),
+          preferredLocations: locs,
+          preferredMode: mode,
+          experienceLevel: document.getElementById('experience-level').value || '',
+          skills: document.getElementById('skills').value.trim(),
+          minMatchScore: parseInt(minScoreSlider.value, 10) || 40
+        };
+        api.setPreferences(p);
+      }
+
+      uniqueLocations().forEach(function (loc) {
+        var opt = document.createElement('option');
+        opt.value = loc;
+        opt.textContent = loc;
+        locSelect.appendChild(opt);
+      });
+
+      minScoreSlider.addEventListener('input', function () {
+        minScoreValue.textContent = minScoreSlider.value;
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        savePreferences();
+        minScoreValue.textContent = minScoreSlider.value;
+        alert('Preferences saved.');
+      });
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      loadPreferences();
+    })();
   </script>
 </body>
 </html>
