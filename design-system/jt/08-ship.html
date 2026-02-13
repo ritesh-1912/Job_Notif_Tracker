@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ship — Job Notification Tracker</title>
+  <link rel="stylesheet" href="../design-system.css">
+  <link rel="stylesheet" href="../app.css">
+</head>
+<body class="app">
+  <header class="app-nav" id="app-nav" role="navigation">
+    <a href="../index.html" class="app-nav__brand">Job Notif Tracker</a>
+    <ul class="app-nav__links">
+      <li><a href="../dashboard.html">Dashboard</a></li>
+      <li><a href="../saved.html">Saved</a></li>
+      <li><a href="../digest.html">Digest</a></li>
+      <li><a href="../settings.html">Settings</a></li>
+      <li><a href="../proof.html">Proof</a></li>
+    </ul>
+    <button type="button" class="app-nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+      <span class="app-nav__toggle-icon"></span>
+    </button>
+  </header>
+  <main class="app-main">
+    <h1 class="app-page-heading">Ship</h1>
+
+    <div class="ship-locked" id="ship-locked">
+      <h2 class="ship-locked__title">Ship Locked</h2>
+      <p class="ship-locked__text">Complete all tests in the checklist to unlock shipping.</p>
+      <a href="07-test.html" class="kn-btn kn-btn--primary">Go to Test Checklist</a>
+    </div>
+
+    <div class="ship-unlocked" id="ship-unlocked" hidden>
+      <h2 class="ship-unlocked__title">Ready to Ship</h2>
+      <p class="ship-unlocked__text">All tests passed. You can proceed with shipping.</p>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'jobTrackerTestChecklist';
+      var TOTAL_TESTS = 10;
+
+      function getChecklist() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function checkUnlocked() {
+        var checklist = getChecklist();
+        var passed = Object.keys(checklist).filter(function (k) { return checklist[k] === true; }).length;
+        var locked = document.getElementById('ship-locked');
+        var unlocked = document.getElementById('ship-unlocked');
+        if (passed === TOTAL_TESTS) {
+          locked.hidden = true;
+          unlocked.hidden = false;
+        } else {
+          locked.hidden = false;
+          unlocked.hidden = true;
+        }
+      }
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      checkUnlocked();
+    })();
+  </script>
+</body>
+</html>

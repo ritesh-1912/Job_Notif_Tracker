@@ -7,6 +7,8 @@
     { "source": "/digest", "destination": "/design-system/digest.html" },
     { "source": "/settings", "destination": "/design-system/settings.html" },
     { "source": "/proof", "destination": "/design-system/proof.html" },
+    { "source": "/jt/07-test", "destination": "/design-system/jt/07-test.html" },
+    { "source": "/jt/08-ship", "destination": "/design-system/jt/08-ship.html" },
     { "source": "/(.*)", "destination": "/design-system/$1" }
   ],
   "headers": [

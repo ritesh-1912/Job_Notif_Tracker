@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Checklist — Job Notification Tracker</title>
+  <link rel="stylesheet" href="../design-system.css">
+  <link rel="stylesheet" href="../app.css">
+</head>
+<body class="app">
+  <header class="app-nav" id="app-nav" role="navigation">
+    <a href="../index.html" class="app-nav__brand">Job Notif Tracker</a>
+    <ul class="app-nav__links">
+      <li><a href="../dashboard.html">Dashboard</a></li>
+      <li><a href="../saved.html">Saved</a></li>
+      <li><a href="../digest.html">Digest</a></li>
+      <li><a href="../settings.html">Settings</a></li>
+      <li><a href="../proof.html">Proof</a></li>
+    </ul>
+    <button type="button" class="app-nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+      <span class="app-nav__toggle-icon"></span>
+    </button>
+  </header>
+  <main class="app-main">
+    <h1 class="app-page-heading">Test Checklist</h1>
+
+    <div class="test-summary" id="test-summary">
+      <div class="test-summary__count">Tests Passed: <span id="test-count">0</span> / 10</div>
+      <div class="test-summary__warning" id="test-warning" hidden>
+        Resolve all issues before shipping.
+      </div>
+    </div>
+
+    <div class="test-checklist" id="test-checklist">
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="prefs-persist">
+          <span>Preferences persist after refresh</span>
+        </label>
+        <p class="test-item__hint">Set preferences in Settings, refresh, verify they're still there.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="match-score">
+          <span>Match score calculates correctly</span>
+        </label>
+        <p class="test-item__hint">Set preferences, check Dashboard job cards show match scores.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="threshold-toggle">
+          <span>"Show only matches" toggle works</span>
+        </label>
+        <p class="test-item__hint">Enable threshold toggle, verify only jobs above threshold show.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="save-persist">
+          <span>Save job persists after refresh</span>
+        </label>
+        <p class="test-item__hint">Save a job on Dashboard, refresh, check Saved page.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="apply-new-tab">
+          <span>Apply opens in new tab</span>
+        </label>
+        <p class="test-item__hint">Click Apply button, verify new tab opens.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="status-persist">
+          <span>Status update persists after refresh</span>
+        </label>
+        <p class="test-item__hint">Change job status, refresh, verify status remains.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="status-filter">
+          <span>Status filter works correctly</span>
+        </label>
+        <p class="test-item__hint">Filter by Applied/Rejected/Selected, verify correct jobs show.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="digest-generate">
+          <span>Digest generates top 10 by score</span>
+        </label>
+        <p class="test-item__hint">Generate digest, verify top 10 jobs sorted by match score.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="digest-persist">
+          <span>Digest persists for the day</span>
+        </label>
+        <p class="test-item__hint">Generate digest, refresh page, verify same digest loads.</p>
+      </div>
+
+      <div class="test-item">
+        <label class="test-item__label">
+          <input type="checkbox" class="test-item__checkbox" data-test-id="no-console-errors">
+          <span>No console errors on main pages</span>
+        </label>
+        <p class="test-item__hint">Open Dashboard, Saved, Digest, Settings, check browser console.</p>
+      </div>
+    </div>
+
+    <div class="test-actions">
+      <button type="button" class="kn-btn kn-btn--secondary" id="test-reset-btn">Reset Test Status</button>
+      <a href="08-ship.html" class="kn-btn kn-btn--primary" id="test-ship-link">Ship →</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'jobTrackerTestChecklist';
+      var TOTAL_TESTS = 10;
+
+      function getChecklist() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function setChecklist(map) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+      }
+
+      function updateSummary() {
+        var checklist = getChecklist();
+        var passed = Object.keys(checklist).filter(function (k) { return checklist[k] === true; }).length;
+        document.getElementById('test-count').textContent = passed;
+        var warning = document.getElementById('test-warning');
+        warning.hidden = passed === TOTAL_TESTS;
+        var shipLink = document.getElementById('test-ship-link');
+        if (passed === TOTAL_TESTS) {
+          shipLink.classList.remove('is-locked');
+          shipLink.style.opacity = '1';
+          shipLink.style.pointerEvents = 'auto';
+          shipLink.style.cursor = 'pointer';
+        } else {
+          shipLink.classList.add('is-locked');
+          shipLink.style.opacity = '0.5';
+          shipLink.style.pointerEvents = 'none';
+          shipLink.style.cursor = 'not-allowed';
+        }
+      }
+
+      function loadChecklist() {
+        var checklist = getChecklist();
+        document.querySelectorAll('.test-item__checkbox').forEach(function (cb) {
+          var id = cb.getAttribute('data-test-id');
+          cb.checked = checklist[id] === true;
+        });
+        updateSummary();
+      }
+
+      document.querySelectorAll('.test-item__checkbox').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+          var id = cb.getAttribute('data-test-id');
+          var checklist = getChecklist();
+          checklist[id] = cb.checked;
+          setChecklist(checklist);
+          updateSummary();
+        });
+      });
+
+      document.getElementById('test-reset-btn').addEventListener('click', function () {
+        if (confirm('Reset all test checkboxes?')) {
+          setChecklist({});
+          loadChecklist();
+        }
+      });
+
+      document.getElementById('test-ship-link').addEventListener('click', function (e) {
+        var checklist = getChecklist();
+        var passed = Object.keys(checklist).filter(function (k) { return checklist[k] === true; }).length;
+        if (passed < TOTAL_TESTS) {
+          e.preventDefault();
+          alert('Complete all tests before shipping.');
+        }
+      });
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      loadChecklist();
+    })();
+  </script>
+</body>
+</html>
