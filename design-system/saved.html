@@ -30,6 +30,8 @@
     <div class="jobs-grid" id="saved-jobs-grid" role="list" hidden></div>
   </main>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <div class="modal-overlay" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
     <div class="modal">
       <div class="modal__header">
@@ -44,12 +46,29 @@
   </div>
 
   <script src="jobs-data.js"></script>
+  <script src="job-status.js"></script>
   <script>
     (function () {
       var STORAGE_KEY = 'jobNotifSavedIds';
       var jobs = window.JOB_NOTIF_JOBS || [];
       var jobById = {};
       jobs.forEach(function (j) { jobById[j.id] = j; });
+      var statusApi = window.JobTrackerStatus;
+
+      function showToast(msg) {
+        var el = document.getElementById('toast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('is-visible');
+        setTimeout(function () { el.classList.remove('is-visible'); }, 2500);
+      }
+
+      function statusBadgeClass(status) {
+        if (status === 'Applied') return 'job-card__status-badge--applied';
+        if (status === 'Rejected') return 'job-card__status-badge--rejected';
+        if (status === 'Selected') return 'job-card__status-badge--selected';
+        return 'job-card__status-badge--neutral';
+      }
 
       function getSavedIds() {
         return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -97,6 +116,11 @@
       }
 
       function renderCard(job) {
+        var currentStatus = statusApi.getStatus(job.id);
+        var statusClass = statusBadgeClass(currentStatus);
+        var statusOptions = statusApi.VALID.map(function (s) {
+          return '<option value="' + escapeAttr(s) + '"' + (s === currentStatus ? ' selected' : '') + '>' + escapeHtml(s) + '</option>';
+        }).join('');
         var card = document.createElement('article');
         card.className = 'job-card';
         card.setAttribute('data-job-id', job.id);
@@ -107,6 +131,7 @@
           '<p class="job-card__meta">' + escapeHtml(job.location) + ' · ' + escapeHtml(job.mode) + '<br>Experience: ' + escapeHtml(job.experience) + '</p>' +
           '<p class="job-card__salary">' + escapeHtml(job.salaryRange) + '</p>' +
           '<div class="job-card__badges"><span class="job-card__badge">' + escapeHtml(job.source) + '</span></div>' +
+          '<div class="job-card__status"><span class="job-card__status-badge ' + statusClass + '">' + escapeHtml(currentStatus) + '</span><select class="job-card__status-select" data-job-id="' + escapeAttr(job.id) + '" aria-label="Job status">' + statusOptions + '</select></div>' +
           '<p class="job-card__posted">' + postedText(job.postedDaysAgo) + '</p>' +
           '<div class="job-card__actions">' +
             '<button type="button" class="kn-btn kn-btn--secondary job-btn-view" data-id="' + escapeAttr(job.id) + '">View</button>' +
@@ -119,6 +144,19 @@
           setSavedIds(ids);
           render();
         });
+        var statusSelect = card.querySelector('.job-card__status-select');
+        var statusBadgeEl = card.querySelector('.job-card__status-badge');
+        if (statusSelect) {
+          statusSelect.addEventListener('change', function () {
+            var newStatus = statusSelect.value;
+            statusApi.setStatus(job.id, newStatus, job.title, job.company);
+            statusBadgeEl.textContent = newStatus;
+            statusBadgeEl.className = 'job-card__status-badge ' + statusBadgeClass(newStatus);
+            if (newStatus === 'Applied' || newStatus === 'Rejected' || newStatus === 'Selected') {
+              showToast('Status updated: ' + newStatus);
+            }
+          });
+        }
         return card;
       }
 

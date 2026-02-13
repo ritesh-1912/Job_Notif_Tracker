@@ -57,6 +57,11 @@
         </div>
         <p class="digest-demo-note">Demo Mode: Daily 9AM trigger simulated manually.</p>
       </div>
+
+      <div class="digest-status-section" id="digest-status-section">
+        <h2 class="digest-status-section__title">Recent Status Updates</h2>
+        <ul class="digest-status-list" id="digest-status-list"></ul>
+      </div>
     </div>
 
     <!-- Empty state when no digest and no prefs message shown -->
@@ -68,11 +73,15 @@
 
   <script src="jobs-data.js"></script>
   <script src="preferences.js"></script>
+  <script src="job-status.js"></script>
   <script>
     (function () {
       var DIGEST_PREFIX = 'jobTrackerDigest_';
       var jobs = window.JOB_NOTIF_JOBS || [];
+      var jobById = {};
+      jobs.forEach(function (j) { jobById[j.id] = j; });
       var prefsApi = window.JobTrackerPreferences;
+      var statusApi = window.JobTrackerStatus;
 
       function todayKey() {
         var d = new Date();
@@ -177,6 +186,29 @@
         emailBtn.href = 'mailto:?subject=' + encodeURIComponent('My 9AM Job Digest') + '&body=' + encodeURIComponent(text);
       }
 
+      function renderStatusSection() {
+        var listEl = document.getElementById('digest-status-list');
+        if (!listEl) return;
+        var history = statusApi.getHistory();
+        listEl.innerHTML = '';
+        history.forEach(function (entry) {
+          var job = jobById[entry.jobId];
+          var title = entry.title || (job && job.title) || 'Job';
+          var company = entry.company || (job && job.company) || '';
+          var dateStr = '';
+          if (entry.updatedAt) {
+            try {
+              var d = new Date(entry.updatedAt);
+              dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) { dateStr = entry.updatedAt; }
+          }
+          var li = document.createElement('li');
+          li.className = 'digest-status-item';
+          li.innerHTML = '<div class="digest-status-item__title">' + escapeHtml(title) + (company ? ' at ' + escapeHtml(company) : '') + '</div><div class="digest-status-item__meta">' + escapeHtml(entry.status) + ' · ' + escapeHtml(dateStr) + '</div>';
+          listEl.appendChild(li);
+        });
+      }
+
       function showState() {
         var prefs = prefsApi.getPreferences();
         var noPrefs = document.getElementById('digest-no-prefs');
@@ -191,6 +223,8 @@
         fallback.hidden = true;
 
         if (!prefs) return;
+
+        renderStatusSection();
 
         var stored = getStoredDigest();
         if (stored && stored.jobs && stored.jobs.length > 0) {
