@@ -24,6 +24,10 @@
   <main class="app-main">
     <h1 class="app-page-heading">Ship</h1>
 
+    <div class="ship-status" id="ship-status">
+      <span class="ship-status__badge ship-status__badge--not-started" id="ship-status-badge">Not Started</span>
+    </div>
+
     <div class="ship-locked" id="ship-locked">
       <h2 class="ship-locked__title">Ship Locked</h2>
       <p class="ship-locked__text">Complete all tests in the checklist to unlock shipping.</p>
@@ -32,13 +36,16 @@
 
     <div class="ship-unlocked" id="ship-unlocked" hidden>
       <h2 class="ship-unlocked__title">Ready to Ship</h2>
-      <p class="ship-unlocked__text">All tests passed. You can proceed with shipping.</p>
+      <p class="ship-unlocked__text">All tests passed. Add proof links and submit from <a href="proof.html">Proof &amp; submission</a> to mark as Shipped.</p>
     </div>
+
+    <p class="ship-success-msg" id="ship-success-msg" hidden>Project 1 Shipped Successfully.</p>
   </main>
 
   <script>
     (function () {
       var STORAGE_KEY = 'jobTrackerTestChecklist';
+      var ARTIFACTS_KEY = 'jobTrackerProofArtifacts';
       var TOTAL_TESTS = 10;
 
       function getChecklist() {
@@ -47,6 +54,54 @@
           return raw ? JSON.parse(raw) : {};
         } catch (e) {
           return {};
+        }
+      }
+
+      function getArtifacts() {
+        try {
+          var raw = localStorage.getItem(ARTIFACTS_KEY);
+          return raw ? JSON.parse(raw) : { lovable: '', github: '', deployed: '' };
+        } catch (e) {
+          return { lovable: '', github: '', deployed: '' };
+        }
+      }
+
+      function isValidUrl(s) {
+        if (!s || typeof s !== 'string') return false;
+        s = s.trim();
+        if (!s) return false;
+        try {
+          var u = new URL(s);
+          return u.protocol === 'https:' || u.protocol === 'http:';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function allThreeLinksProvided() {
+        var a = getArtifacts();
+        return isValidUrl(a.lovable) && isValidUrl(a.github) && isValidUrl(a.deployed);
+      }
+
+      function updateStatusBadge() {
+        var checklist = getChecklist();
+        var passed = Object.keys(checklist).filter(function (k) { return checklist[k] === true; }).length;
+        var allTests = passed === TOTAL_TESTS;
+        var allLinks = allThreeLinksProvided();
+
+        var badge = document.getElementById('ship-status-badge');
+        var successMsg = document.getElementById('ship-success-msg');
+        if (!badge) return;
+
+        if (allTests && allLinks) {
+          badge.textContent = 'Shipped';
+          badge.className = 'ship-status__badge ship-status__badge--shipped';
+          if (successMsg) successMsg.hidden = false;
+        } else {
+          if (successMsg) successMsg.hidden = true;
+          var anyProgress = passed > 0 || allLinks;
+          badge.textContent = anyProgress ? 'In Progress' : 'Not Started';
+          badge.className = 'ship-status__badge ship-status__badge--' + (anyProgress ? 'in-progress' : 'not-started');
         }
       }
 
@@ -62,6 +117,7 @@
           locked.hidden = false;
           unlocked.hidden = true;
         }
+        updateStatusBadge();
       }
 
       document.getElementById('nav-toggle').addEventListener('click', function () {

@@ -692,6 +692,108 @@ select.kn-input[multiple] {
   line-height: var(--kn-body-line);
 }
 
+/* ─── JT Proof page (/jt/proof) ─── */
+.proof-section {
+  max-width: var(--kn-body-max-width);
+  margin-bottom: var(--kn-space-4);
+}
+
+.proof-section__title {
+  font-family: var(--kn-font-serif);
+  font-size: var(--kn-heading-size-sm);
+  font-weight: 600;
+  margin: 0 0 var(--kn-space-2);
+  color: var(--kn-text);
+}
+
+.proof-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: var(--kn-border-width) solid var(--kn-border);
+  border-radius: var(--kn-radius);
+}
+
+.proof-step {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--kn-space-2) var(--kn-space-3);
+  border-bottom: var(--kn-border-width) solid var(--kn-border);
+  font-size: var(--kn-body-size);
+}
+
+.proof-step:last-child {
+  border-bottom: none;
+}
+
+.proof-step__name {
+  color: var(--kn-text);
+}
+
+.proof-step__status {
+  color: var(--kn-text);
+  opacity: 0.75;
+  font-weight: 500;
+}
+
+.proof-step__status--done {
+  color: var(--kn-accent);
+  opacity: 1;
+}
+
+.proof-artifacts .form-group {
+  margin-bottom: var(--kn-space-3);
+}
+
+.proof-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.proof-input-error {
+  color: var(--kn-accent);
+  margin-top: var(--kn-space-1);
+}
+
+.proof-actions {
+  max-width: var(--kn-body-max-width);
+  margin-top: var(--kn-space-4);
+}
+
+/* ─── Ship status badge ─── */
+.ship-status {
+  max-width: var(--kn-body-max-width);
+  margin-bottom: var(--kn-space-4);
+}
+
+.ship-status__badge {
+  display: inline-block;
+  padding: var(--kn-space-1) var(--kn-space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--kn-radius);
+  border: var(--kn-border-width) solid var(--kn-border);
+  color: var(--kn-text);
+  background: var(--kn-bg);
+}
+
+.ship-status__badge--not-started { opacity: 0.8; }
+.ship-status__badge--in-progress { border-color: var(--kn-accent); color: var(--kn-accent); }
+.ship-status__badge--shipped { border-color: var(--kn-accent); background: var(--kn-accent); color: var(--kn-bg); }
+
+.ship-success-msg {
+  font-family: var(--kn-font-serif);
+  font-size: var(--kn-heading-size-sm);
+  font-weight: 600;
+  color: var(--kn-text);
+  margin: var(--kn-space-3) 0 0;
+  padding: var(--kn-space-3);
+  border-left: 3px solid var(--kn-accent);
+  background: rgba(139, 0, 0, 0.06);
+}
+
 /* ─── Filter bar ─── */
 .filter-bar {
   display: flex;

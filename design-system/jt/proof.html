@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proof — Job Notification Tracker</title>
+  <link rel="stylesheet" href="../design-system.css">
+  <link rel="stylesheet" href="../app.css">
+</head>
+<body class="app">
+  <header class="app-nav" id="app-nav" role="navigation">
+    <a href="../index.html" class="app-nav__brand">Job Notif Tracker</a>
+    <ul class="app-nav__links">
+      <li><a href="../dashboard.html">Dashboard</a></li>
+      <li><a href="../saved.html">Saved</a></li>
+      <li><a href="../digest.html">Digest</a></li>
+      <li><a href="../settings.html">Settings</a></li>
+      <li><a href="../proof.html">Proof</a></li>
+    </ul>
+    <button type="button" class="app-nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+      <span class="app-nav__toggle-icon"></span>
+    </button>
+  </header>
+  <main class="app-main">
+    <h1 class="app-page-heading">Project 1 — Job Notification Tracker</h1>
+
+    <section class="proof-section" aria-labelledby="proof-steps-heading">
+      <h2 id="proof-steps-heading" class="proof-section__title">A) Step Completion Summary</h2>
+      <ul class="proof-steps" id="proof-steps">
+        <li class="proof-step"><span class="proof-step__name">Design system & app shell</span><span class="proof-step__status" data-step="1">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Preferences & match scoring</span><span class="proof-step__status" data-step="2">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Dashboard & filters</span><span class="proof-step__status" data-step="3">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Save job & Apply</span><span class="proof-step__status" data-step="4">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Status tracking</span><span class="proof-step__status" data-step="5">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Daily digest</span><span class="proof-step__status" data-step="6">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Test checklist (10/10)</span><span class="proof-step__status" data-step="7">Pending</span></li>
+        <li class="proof-step"><span class="proof-step__name">Proof artifacts (3 links)</span><span class="proof-step__status" data-step="8">Pending</span></li>
+      </ul>
+    </section>
+
+    <section class="proof-section" aria-labelledby="proof-artifacts-heading">
+      <h2 id="proof-artifacts-heading" class="proof-section__title">B) Artifact Collection</h2>
+      <div class="proof-artifacts">
+        <div class="form-group">
+          <label class="form-label" for="artifact-lovable">Lovable Project Link</label>
+          <input type="url" id="artifact-lovable" class="kn-input proof-input" placeholder="https://..." autocomplete="off">
+          <p class="form-hint proof-input-error" id="error-lovable" hidden>Enter a valid URL (https://...).</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="artifact-github">GitHub Repository Link</label>
+          <input type="url" id="artifact-github" class="kn-input proof-input" placeholder="https://github.com/..." autocomplete="off">
+          <p class="form-hint proof-input-error" id="error-github" hidden>Enter a valid URL (https://...).</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="artifact-deployed">Deployed URL (Vercel or equivalent)</label>
+          <input type="url" id="artifact-deployed" class="kn-input proof-input" placeholder="https://..." autocomplete="off">
+          <p class="form-hint proof-input-error" id="error-deployed" hidden>Enter a valid URL (https://...).</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="proof-actions">
+      <button type="button" class="kn-btn kn-btn--primary" id="proof-copy-btn">Copy Final Submission</button>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var ARTIFACTS_KEY = 'jobTrackerProofArtifacts';
+      var TEST_KEY = 'jobTrackerTestChecklist';
+      var PREF_KEY = 'jobTrackerPreferences';
+      var SAVED_KEY = 'jobNotifSavedIds';
+      var STATUS_KEY = 'jobTrackerStatus';
+
+      function todayKey() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
+
+      function getArtifacts() {
+        try {
+          var raw = localStorage.getItem(ARTIFACTS_KEY);
+          return raw ? JSON.parse(raw) : { lovable: '', github: '', deployed: '' };
+        } catch (e) {
+          return { lovable: '', github: '', deployed: '' };
+        }
+      }
+
+      function setArtifacts(a) {
+        localStorage.setItem(ARTIFACTS_KEY, JSON.stringify(a));
+      }
+
+      function isValidUrl(s) {
+        if (!s || typeof s !== 'string') return false;
+        s = s.trim();
+        if (!s) return false;
+        try {
+          var u = new URL(s);
+          return u.protocol === 'https:' || u.protocol === 'http:';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function updateStepStatus() {
+        var prefs = null;
+        try { prefs = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch (e) {}
+        var saved = [];
+        try { saved = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch (e) {}
+        var statusMap = {};
+        try { statusMap = JSON.parse(localStorage.getItem(STATUS_KEY) || '{}'); } catch (e) {}
+        var testChecklist = {};
+        try { testChecklist = JSON.parse(localStorage.getItem(TEST_KEY) || '{}'); } catch (e) {}
+        var testsPassed = Object.keys(testChecklist).filter(function (k) { return testChecklist[k] === true; }).length;
+        var digestKey = 'jobTrackerDigest_' + todayKey();
+        var hasDigest = !!localStorage.getItem(digestKey);
+        var artifacts = getArtifacts();
+        var hasAllLinks = isValidUrl(artifacts.lovable) && isValidUrl(artifacts.github) && isValidUrl(artifacts.deployed);
+
+        var steps = [
+          true,
+          !!(prefs && (prefs.roleKeywords || (prefs.preferredLocations && prefs.preferredLocations.length) || prefs.experienceLevel || prefs.skills)),
+          true,
+          saved.length > 0,
+          Object.keys(statusMap).length > 0,
+          hasDigest,
+          testsPassed === 10,
+          hasAllLinks
+        ];
+
+        steps.forEach(function (done, i) {
+          var el = document.querySelector('.proof-step__status[data-step="' + (i + 1) + '"]');
+          if (el) {
+            el.textContent = done ? 'Completed' : 'Pending';
+            el.className = 'proof-step__status' + (done ? ' proof-step__status--done' : '');
+          }
+        });
+      }
+
+      function buildSubmissionText() {
+        var a = getArtifacts();
+        return [
+          '------------------------------------------',
+          'Job Notification Tracker — Final Submission',
+          '',
+          'Lovable Project: ' + ((a.lovable || '').trim() || ''),
+          'GitHub Repository: ' + ((a.github || '').trim() || ''),
+          'Live Deployment: ' + ((a.deployed || '').trim() || ''),
+          '',
+          'Core Features:',
+          '- Intelligent match scoring',
+          '- Daily digest simulation',
+          '- Status tracking',
+          '- Test checklist enforced',
+          '------------------------------------------'
+        ].join('\n');
+      }
+
+      function saveAndValidate(inputId, key) {
+        var input = document.getElementById(inputId);
+        var err = document.getElementById('error-' + inputId.replace('artifact-', ''));
+        var value = (input.value || '').trim();
+        var valid = !value || isValidUrl(value);
+        if (err) err.hidden = valid;
+        if (input) input.setAttribute('aria-invalid', valid ? 'false' : 'true');
+        var a = getArtifacts();
+        a[key] = value;
+        setArtifacts(a);
+        updateStepStatus();
+      }
+
+      document.getElementById('artifact-lovable').addEventListener('blur', function () { saveAndValidate('artifact-lovable', 'lovable'); });
+      document.getElementById('artifact-github').addEventListener('blur', function () { saveAndValidate('artifact-github', 'github'); });
+      document.getElementById('artifact-deployed').addEventListener('blur', function () { saveAndValidate('artifact-deployed', 'deployed'); });
+
+      document.getElementById('proof-copy-btn').addEventListener('click', function () {
+        saveAndValidate('artifact-lovable', 'lovable');
+        saveAndValidate('artifact-github', 'github');
+        saveAndValidate('artifact-deployed', 'deployed');
+        var a = getArtifacts();
+        if (!isValidUrl(a.lovable) || !isValidUrl(a.github) || !isValidUrl(a.deployed)) {
+          alert('Please fill and validate all three links first.');
+          return;
+        }
+        var text = buildSubmissionText();
+        navigator.clipboard.writeText(text).then(function () {
+          var btn = document.getElementById('proof-copy-btn');
+          var orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function () { btn.textContent = orig; }, 2000);
+        }).catch(function () {});
+      });
+
+      var a = getArtifacts();
+      document.getElementById('artifact-lovable').value = a.lovable || '';
+      document.getElementById('artifact-github').value = a.github || '';
+      document.getElementById('artifact-deployed').value = a.deployed || '';
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      updateStepStatus();
+    })();
+  </script>
+</body>
+</html>
