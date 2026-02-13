@@ -23,15 +23,138 @@
   </header>
   <main class="app-main">
     <h1 class="app-page-heading">Saved</h1>
-    <div class="empty-state">
+    <div class="empty-state" id="saved-empty">
       <h2 class="empty-state__heading">No saved jobs yet.</h2>
-      <p class="empty-state__text">Jobs you save will appear here.</p>
+      <p class="empty-state__text">Jobs you save from the Dashboard will appear here.</p>
     </div>
+    <div class="jobs-grid" id="saved-jobs-grid" role="list" hidden></div>
   </main>
+
+  <div class="modal-overlay" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <h2 id="modal-title" class="modal__title"></h2>
+        <button type="button" class="modal__close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__description" id="modal-description"></p>
+        <p class="modal__skills" id="modal-skills"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="jobs-data.js"></script>
   <script>
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-      document.getElementById('app-nav').classList.toggle('is-open');
-    });
+    (function () {
+      var STORAGE_KEY = 'jobNotifSavedIds';
+      var jobs = window.JOB_NOTIF_JOBS || [];
+      var jobById = {};
+      jobs.forEach(function (j) { jobById[j.id] = j; });
+
+      function getSavedIds() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      }
+
+      function setSavedIds(ids) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+      }
+
+      function postedText(days) {
+        if (days === 0) return 'Today';
+        if (days === 1) return '1 day ago';
+        return days + ' days ago';
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function escapeAttr(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function openModal(job) {
+        var overlay = document.getElementById('job-modal');
+        var titleEl = document.getElementById('modal-title');
+        var descEl = document.getElementById('modal-description');
+        var skillsEl = document.getElementById('modal-skills');
+        titleEl.textContent = job.title + ' at ' + job.company;
+        descEl.textContent = job.description || '';
+        skillsEl.innerHTML = '<strong>Skills:</strong> ' + escapeHtml(Array.isArray(job.skills) ? job.skills.join(', ') : '');
+        overlay.hidden = false;
+        overlay.classList.add('is-open');
+        document.getElementById('modal-close').focus();
+      }
+
+      function closeModal() {
+        var overlay = document.getElementById('job-modal');
+        overlay.classList.remove('is-open');
+        overlay.hidden = true;
+      }
+
+      function renderCard(job) {
+        var card = document.createElement('article');
+        card.className = 'job-card';
+        card.setAttribute('data-job-id', job.id);
+        card.setAttribute('role', 'listitem');
+        card.innerHTML =
+          '<h3 class="job-card__title">' + escapeHtml(job.title) + '</h3>' +
+          '<p class="job-card__company">' + escapeHtml(job.company) + '</p>' +
+          '<p class="job-card__meta">' + escapeHtml(job.location) + ' · ' + escapeHtml(job.mode) + '<br>Experience: ' + escapeHtml(job.experience) + '</p>' +
+          '<p class="job-card__salary">' + escapeHtml(job.salaryRange) + '</p>' +
+          '<div class="job-card__badges"><span class="job-card__badge">' + escapeHtml(job.source) + '</span></div>' +
+          '<p class="job-card__posted">' + postedText(job.postedDaysAgo) + '</p>' +
+          '<div class="job-card__actions">' +
+            '<button type="button" class="kn-btn kn-btn--secondary job-btn-view" data-id="' + escapeAttr(job.id) + '">View</button>' +
+            '<button type="button" class="kn-btn kn-btn--secondary job-btn-remove" data-id="' + escapeAttr(job.id) + '">Remove</button>' +
+            '<a href="' + escapeAttr(job.applyUrl) + '" target="_blank" rel="noopener" class="kn-btn kn-btn--primary">Apply</a>' +
+          '</div>';
+        card.querySelector('.job-btn-view').addEventListener('click', function () { openModal(job); });
+        card.querySelector('.job-btn-remove').addEventListener('click', function () {
+          var ids = getSavedIds().filter(function (id) { return id !== job.id; });
+          setSavedIds(ids);
+          render();
+        });
+        return card;
+      }
+
+      function render() {
+        var ids = getSavedIds();
+        var savedJobs = ids.map(function (id) { return jobById[id]; }).filter(Boolean);
+        var emptyEl = document.getElementById('saved-empty');
+        var gridEl = document.getElementById('saved-jobs-grid');
+
+        if (savedJobs.length === 0) {
+          emptyEl.hidden = false;
+          gridEl.hidden = true;
+          gridEl.innerHTML = '';
+          return;
+        }
+        emptyEl.hidden = true;
+        gridEl.hidden = false;
+        gridEl.innerHTML = '';
+        savedJobs.forEach(function (job) {
+          gridEl.appendChild(renderCard(job));
+        });
+      }
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('job-modal').addEventListener('click', function (e) {
+        if (e.target === document.getElementById('job-modal')) closeModal();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && document.getElementById('job-modal').classList.contains('is-open')) closeModal();
+      });
+
+      render();
+    })();
   </script>
 </body>
 </html>

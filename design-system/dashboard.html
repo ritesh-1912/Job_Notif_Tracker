@@ -23,15 +23,249 @@
   </header>
   <main class="app-main">
     <h1 class="app-page-heading">Dashboard</h1>
-    <div class="empty-state">
-      <h2 class="empty-state__heading">No jobs yet.</h2>
-      <p class="empty-state__text">In the next step, you will load a realistic dataset.</p>
+
+    <div class="filter-bar" id="filter-bar" aria-label="Filter jobs">
+      <input type="search" id="filter-keyword" class="kn-input filter-bar__keyword" placeholder="Keyword (title or company)" aria-label="Search by title or company">
+      <select id="filter-location" class="kn-input" aria-label="Location">
+        <option value="">All locations</option>
+      </select>
+      <select id="filter-mode" class="kn-input" aria-label="Mode">
+        <option value="">All modes</option>
+        <option value="Remote">Remote</option>
+        <option value="Hybrid">Hybrid</option>
+        <option value="Onsite">Onsite</option>
+      </select>
+      <select id="filter-experience" class="kn-input" aria-label="Experience">
+        <option value="">All levels</option>
+        <option value="Fresher">Fresher</option>
+        <option value="0-1">0-1</option>
+        <option value="1-3">1-3</option>
+        <option value="3-5">3-5</option>
+      </select>
+      <select id="filter-source" class="kn-input" aria-label="Source">
+        <option value="">All sources</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="Naukri">Naukri</option>
+        <option value="Indeed">Indeed</option>
+      </select>
+      <select id="filter-sort" class="kn-input" aria-label="Sort">
+        <option value="latest">Latest</option>
+        <option value="oldest">Oldest</option>
+      </select>
+    </div>
+
+    <div class="jobs-grid" id="jobs-grid" role="list"></div>
+    <div class="empty-state" id="dashboard-empty" hidden>
+      <h2 class="empty-state__heading">No jobs match your filters.</h2>
+      <p class="empty-state__text">Try changing or clearing filters.</p>
     </div>
   </main>
+
+  <div class="modal-overlay" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <h2 id="modal-title" class="modal__title"></h2>
+        <button type="button" class="modal__close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__description" id="modal-description"></p>
+        <p class="modal__skills" id="modal-skills"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="jobs-data.js"></script>
   <script>
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-      document.getElementById('app-nav').classList.toggle('is-open');
-    });
+    (function () {
+      var STORAGE_KEY = 'jobNotifSavedIds';
+      var jobs = window.JOB_NOTIF_JOBS || [];
+      var savedIds = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      function getSavedSet() {
+        return new Set(savedIds);
+      }
+
+      function saveJobId(id) {
+        if (savedIds.indexOf(id) === -1) {
+          savedIds.push(id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(savedIds));
+        }
+      }
+
+      function unsaveJobId(id) {
+        savedIds = savedIds.filter(function (x) { return x !== id; });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedIds));
+      }
+
+      function uniqueValues(arr, key) {
+        var seen = {};
+        arr.forEach(function (j) {
+          var v = j[key];
+          if (v && !seen[v]) { seen[v] = true; }
+        });
+        return Object.keys(seen).sort();
+      }
+
+      function postedText(days) {
+        if (days === 0) return 'Today';
+        if (days === 1) return '1 day ago';
+        return days + ' days ago';
+      }
+
+      function filterAndSort() {
+        var keyword = (document.getElementById('filter-keyword').value || '').trim().toLowerCase();
+        var location = (document.getElementById('filter-location').value || '').trim();
+        var mode = (document.getElementById('filter-mode').value || '').trim();
+        var experience = (document.getElementById('filter-experience').value || '').trim();
+        var source = (document.getElementById('filter-source').value || '').trim();
+        var sort = document.getElementById('filter-sort').value || 'latest';
+
+        var list = jobs.filter(function (j) {
+          if (keyword) {
+            var match = (j.title + ' ' + j.company).toLowerCase().indexOf(keyword) !== -1;
+            if (!match) return false;
+          }
+          if (location && j.location !== location) return false;
+          if (mode && j.mode !== mode) return false;
+          if (experience && j.experience !== experience) return false;
+          if (source && j.source !== source) return false;
+          return true;
+        });
+
+        list = list.slice().sort(function (a, b) {
+          return sort === 'latest' ? a.postedDaysAgo - b.postedDaysAgo : b.postedDaysAgo - a.postedDaysAgo;
+        });
+
+        return list;
+      }
+
+      function renderJobCard(job, isSaved) {
+        var card = document.createElement('article');
+        card.className = 'job-card';
+        card.setAttribute('data-job-id', job.id);
+        card.setAttribute('role', 'listitem');
+
+        var skillsText = Array.isArray(job.skills) ? job.skills.join(', ') : '';
+
+        card.innerHTML =
+          '<h3 class="job-card__title">' + escapeHtml(job.title) + '</h3>' +
+          '<p class="job-card__company">' + escapeHtml(job.company) + '</p>' +
+          '<p class="job-card__meta">' + escapeHtml(job.location) + ' · ' + escapeHtml(job.mode) + '<br>Experience: ' + escapeHtml(job.experience) + '</p>' +
+          '<p class="job-card__salary">' + escapeHtml(job.salaryRange) + '</p>' +
+          '<div class="job-card__badges"><span class="job-card__badge">' + escapeHtml(job.source) + '</span></div>' +
+          '<p class="job-card__posted">' + postedText(job.postedDaysAgo) + '</p>' +
+          '<div class="job-card__actions">' +
+            '<button type="button" class="kn-btn kn-btn--secondary job-btn-view" data-id="' + escapeAttr(job.id) + '">View</button>' +
+            '<button type="button" class="kn-btn kn-btn--secondary job-btn-save" data-id="' + escapeAttr(job.id) + '">' + (isSaved ? 'Saved' : 'Save') + '</button>' +
+            '<a href="' + escapeAttr(job.applyUrl) + '" target="_blank" rel="noopener" class="kn-btn kn-btn--primary">Apply</a>' +
+          '</div>';
+
+        var viewBtn = card.querySelector('.job-btn-view');
+        var saveBtn = card.querySelector('.job-btn-save');
+
+        viewBtn.addEventListener('click', function () {
+          openModal(job);
+        });
+
+        saveBtn.addEventListener('click', function () {
+          var id = job.id;
+          if (getSavedSet().has(id)) {
+            unsaveJobId(id);
+            saveBtn.textContent = 'Save';
+          } else {
+            saveJobId(id);
+            saveBtn.textContent = 'Saved';
+          }
+        });
+
+        return card;
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function escapeAttr(s) {
+        if (s == null) return '';
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      function openModal(job) {
+        var overlay = document.getElementById('job-modal');
+        var titleEl = document.getElementById('modal-title');
+        var descEl = document.getElementById('modal-description');
+        var skillsEl = document.getElementById('modal-skills');
+        titleEl.textContent = job.title + ' at ' + job.company;
+        descEl.textContent = job.description || '';
+        skillsEl.innerHTML = '<strong>Skills:</strong> ' + escapeHtml(Array.isArray(job.skills) ? job.skills.join(', ') : '');
+        overlay.hidden = false;
+        overlay.classList.add('is-open');
+        document.getElementById('modal-close').focus();
+      }
+
+      function closeModal() {
+        var overlay = document.getElementById('job-modal');
+        overlay.classList.remove('is-open');
+        overlay.hidden = true;
+      }
+
+      function render() {
+        var list = filterAndSort();
+        var grid = document.getElementById('jobs-grid');
+        var emptyEl = document.getElementById('dashboard-empty');
+        var savedSet = getSavedSet();
+
+        grid.innerHTML = '';
+        if (list.length === 0) {
+          emptyEl.hidden = false;
+          return;
+        }
+        emptyEl.hidden = true;
+        list.forEach(function (job) {
+          grid.appendChild(renderJobCard(job, savedSet.has(job.id)));
+        });
+      }
+
+      function fillLocationOptions() {
+        var sel = document.getElementById('filter-location');
+        var opts = uniqueValues(jobs, 'location');
+        opts.forEach(function (loc) {
+          var opt = document.createElement('option');
+          opt.value = loc;
+          opt.textContent = loc;
+          sel.appendChild(opt);
+        });
+      }
+
+      document.getElementById('nav-toggle').addEventListener('click', function () {
+        document.getElementById('app-nav').classList.toggle('is-open');
+      });
+
+      ['filter-location', 'filter-mode', 'filter-experience', 'filter-source', 'filter-sort'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', render);
+      });
+      document.getElementById('filter-keyword').addEventListener('input', render);
+      document.getElementById('filter-keyword').addEventListener('change', render);
+
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('job-modal').addEventListener('click', function (e) {
+        if (e.target === document.getElementById('job-modal')) closeModal();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && document.getElementById('job-modal').classList.contains('is-open')) closeModal();
+      });
+
+      fillLocationOptions();
+      render();
+    })();
   </script>
 </body>
 </html>
