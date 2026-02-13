@@ -1,0 +1,177 @@
+/**
+ * Job Notification Tracker — App shell (KodNest Premium Build System)
+ * Top nav, active state, hamburger on mobile, page placeholder layout.
+ */
+
+/* ─── App layout ─── */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Top navigation bar ─── */
+.app-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--kn-space-2) var(--kn-space-4);
+  border-bottom: var(--kn-border-width) solid var(--kn-border);
+  background: var(--kn-background);
+}
+
+.app-nav__brand {
+  font-family: var(--kn-font-serif);
+  font-size: var(--kn-heading-size-sm);
+  font-weight: 600;
+  color: var(--kn-text);
+  text-decoration: none;
+  letter-spacing: var(--kn-letter-spacing-heading);
+}
+
+.app-nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--kn-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-nav__links a {
+  display: block;
+  padding: var(--kn-space-1) var(--kn-space-2);
+  font-family: var(--kn-font-sans);
+  font-size: var(--kn-body-size);
+  font-weight: 500;
+  color: var(--kn-text);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: border-color var(--kn-transition), color var(--kn-transition);
+}
+
+.app-nav__links a:hover {
+  color: var(--kn-accent);
+}
+
+.app-nav__links a.is-active {
+  color: var(--kn-accent);
+  border-bottom-color: var(--kn-accent);
+}
+
+/* Hamburger button (hidden on desktop) */
+.app-nav__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: var(--kn-border-width) solid var(--kn-border);
+  border-radius: var(--kn-radius);
+  color: var(--kn-text);
+  cursor: pointer;
+  transition: border-color var(--kn-transition);
+}
+
+.app-nav__toggle:hover {
+  border-color: var(--kn-accent);
+}
+
+.app-nav__toggle-icon {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  position: relative;
+}
+
+.app-nav__toggle-icon::before,
+.app-nav__toggle-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  transition: transform var(--kn-transition);
+}
+
+.app-nav__toggle-icon::before {
+  top: -6px;
+}
+
+.app-nav__toggle-icon::after {
+  top: 6px;
+}
+
+.app-nav.is-open .app-nav__toggle-icon {
+  background: transparent;
+}
+
+.app-nav.is-open .app-nav__toggle-icon::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.app-nav.is-open .app-nav__toggle-icon::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* ─── Main content (placeholder pages) ─── */
+.app-main {
+  flex: 1;
+  padding: var(--kn-space-5) var(--kn-space-4);
+}
+
+.app-page-heading {
+  font-family: var(--kn-font-serif);
+  font-size: var(--kn-heading-size);
+  font-weight: 600;
+  letter-spacing: var(--kn-letter-spacing-heading);
+  margin: 0 0 var(--kn-space-2);
+  color: var(--kn-text);
+}
+
+.app-page-subtext {
+  font-size: var(--kn-body-size);
+  color: var(--kn-text);
+  opacity: 0.85;
+  margin: 0;
+  max-width: var(--kn-body-max-width);
+}
+
+/* ─── Mobile: hamburger menu ─── */
+@media (max-width: 768px) {
+  .app-nav {
+    flex-wrap: wrap;
+  }
+
+  .app-nav__toggle {
+    display: flex;
+  }
+
+  .app-nav__links {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: var(--kn-space-2);
+    border-top: var(--kn-border-width) solid var(--kn-border);
+    margin-top: var(--kn-space-2);
+  }
+
+  .app-nav__links a {
+    padding: var(--kn-space-2);
+  }
+
+  .app-nav.is-open .app-nav__links {
+    display: flex;
+  }
+
+  .app-main {
+    padding: var(--kn-space-4) var(--kn-space-3);
+  }
+}

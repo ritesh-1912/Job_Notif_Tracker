@@ -2,20 +2,17 @@
   "buildCommand": null,
   "outputDirectory": "design-system",
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/design-system/$1"
-    }
+    { "source": "/dashboard", "destination": "/design-system/dashboard.html" },
+    { "source": "/saved", "destination": "/design-system/saved.html" },
+    { "source": "/digest", "destination": "/design-system/digest.html" },
+    { "source": "/settings", "destination": "/design-system/settings.html" },
+    { "source": "/proof", "destination": "/design-system/proof.html" },
+    { "source": "/(.*)", "destination": "/design-system/$1" }
   ],
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
     }
   ]
 }
